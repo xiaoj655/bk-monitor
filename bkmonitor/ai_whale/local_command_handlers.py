@@ -42,6 +42,7 @@ class TracingAnalysisCommandHandler(CommandHandler):
 
     @staticmethod
     def get_trace_total_time(trace: list[dict]) -> int:
+        # 找到最大的 end_time 和最小的 start_time, 计算两者差值为总耗时
         st, end = inf, 0
         for span in trace:
             st = min(st, span.get("start_time", 0))
@@ -66,12 +67,12 @@ class TracingAnalysisCommandHandler(CommandHandler):
         return trace_data
 
     def process_trace_data(self, trace_data):
-        # 1. 超长的 trace 数据只保留必要字段
+        #  获取 trace 总耗时, 在保留必要字段之前计算
+        total_time = f"{self.us_to_ms(self.get_trace_total_time(trace_data))}ms"
+
+        # 长的 trace 数据只保留必要字段
         if len(trace_data) > self.max_span:
             trace_data = [{k: x.get(k, None) for k in self.keys} for x in trace_data]
-
-        #  获取 trace 总耗时
-        total_time = f"{self.us_to_ms(self.get_trace_total_time(trace_data))}ms"
 
         # 收集 trace_data_lite 和 error_span_ids, 同时控制长度
         error_span_ids = []
